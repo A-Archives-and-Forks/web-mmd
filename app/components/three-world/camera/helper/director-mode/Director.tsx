@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import BeatCircle from "./BeatCircle";
 import useGlobalStore from "@/app/stores/useGlobalStore";
 import { PerspectiveCamera, Quaternion, Spherical, Vector2, Vector3 } from "three";
@@ -68,8 +68,14 @@ function Director() {
     const modeRef = useRef(MODE.SET)
     const trackAngleRef = useRef(false)
     const trackDistanceRef = useRef(true)
-    const trackUpRef = useRef(true)
-    const trackTargetRef = useRef(true)
+    const trackUpRef = useRef(false)
+    const trackTargetRef = useRef(false)
+
+    const isShowToastRef = useRef(false)
+    const showToast = useCallback((...args: Parameters<typeof enqueueSnackbar>) => {
+        if (!isShowToastRef.current) return
+        enqueueSnackbar(...args)
+    }, [enqueueSnackbar])
 
     useEffect(() => {
         const onPause = () => {
@@ -79,22 +85,21 @@ function Director() {
 
         const checkTrackings = (e: KeyboardEvent) => {
             if (modeRef.current == MODE.SET) {
-                if (e.ctrlKey) return
                 if (e.key == "1") {
                     trackAngleRef.current = !trackAngleRef.current
-                    enqueueSnackbar(trackAngleRef.current ? 'Angle Tracking Started' : 'Angle Tracking Stopped', infoStyle(trackAngleRef.current))
+                    showToast(trackAngleRef.current ? 'Angle Tracking Started' : 'Angle Tracking Stopped', infoStyle(trackAngleRef.current))
                 }
                 if (e.key == "2") {
                     trackTargetRef.current = !trackTargetRef.current
-                    enqueueSnackbar(trackTargetRef.current ? 'Target Tracking Started' : 'Target Tracking Stopped', infoStyle(trackTargetRef.current))
+                    showToast(trackTargetRef.current ? 'Target Tracking Started' : 'Target Tracking Stopped', infoStyle(trackTargetRef.current))
                 }
                 if (e.key == "3") {
                     trackDistanceRef.current = !trackDistanceRef.current
-                    enqueueSnackbar(trackDistanceRef.current ? 'Distance Tracking Started' : 'Distance Tracking Stopped', infoStyle(trackDistanceRef.current))
+                    showToast(trackDistanceRef.current ? 'Distance Tracking Started' : 'Distance Tracking Stopped', infoStyle(trackDistanceRef.current))
                 }
                 if (e.key == "4") {
                     trackUpRef.current = !trackUpRef.current
-                    enqueueSnackbar(trackUpRef.current ? 'Up Tracking Started' : 'Up Tracking Stopped', infoStyle(trackUpRef.current))
+                    showToast(trackUpRef.current ? 'Up Tracking Started' : 'Up Tracking Stopped', infoStyle(trackUpRef.current))
                 }
             }
 
@@ -110,7 +115,7 @@ function Director() {
             }
         }
 
-        const onKeydown = (e: KeyboardEvent) => {
+        const onKeyboardShortcuts = (e: KeyboardEvent) => {
             e.preventDefault()
             if (e.repeat) return
 
@@ -118,17 +123,15 @@ function Director() {
 
             if (e.key == "Tab") {
                 modeRef.current = isSet ? MODE.NONE : MODE.SET
-                enqueueSnackbar(!isSet ? 'All Tracking Started' : 'All Tracking Stopped', infoStyle(!isSet))
+                showToast(!isSet ? 'All Tracking Started' : 'All Tracking Stopped', infoStyle(!isSet))
             }
-            if (e.ctrlKey) {
-                if (e.key == "1") {
+            if (e.key == "`") {
+                if (trackBoneRef.current == "頭") {
                     trackBoneRef.current = "上半身"
-                    enqueueSnackbar("Tracking 上半身")
-                }
-                if (e.key == "2") {
+                } else if (trackBoneRef.current == "上半身") {
                     trackBoneRef.current = "頭"
-                    enqueueSnackbar("Tracking 頭")
                 }
+                showToast(`Tracking ${trackBoneRef.current}`)
             }
             checkTrackings(e)
         }
@@ -150,7 +153,7 @@ function Director() {
                 document.exitPointerLock()
             }
         }
-        
+
         const onMousemove = (e: MouseEvent) => {
             cameraPose.dampingFactor = 5.0
             if (mouseModeRef.current === null) return
@@ -192,14 +195,16 @@ function Director() {
         }
 
         player.addEventListener("pause", onPause)
-        document.addEventListener("keydown", onKeydown)
+        document.addEventListener("keydown", onKeyboardShortcuts)
+        document.addEventListener("keyup", onKeyboardShortcuts)
         domElement.addEventListener("mousemove", onMousemove)
         domElement.addEventListener("mousedown", onMousedown)
         domElement.addEventListener("wheel", onWheel)
         domElement.addEventListener("contextmenu", onContextmenu)
         return () => {
             player.removeEventListener("pause", onPause)
-            document.removeEventListener("keydown", onKeydown)
+            document.removeEventListener("keydown", onKeyboardShortcuts)
+            document.removeEventListener("keyup", onKeyboardShortcuts)
             domElement.removeEventListener("mousemove", onMousemove)
             domElement.removeEventListener("mousedown", onMousedown)
             domElement.removeEventListener("wheel", onWheel)
@@ -212,7 +217,7 @@ function Director() {
         let handsDistantce = 0.0
 
         cameraPose.target.copy(panPos)
-        
+
         if (modeRef.current != MODE.NONE) {
             if (trackDistanceRef.current) {
                 model.skeleton.getBoneByName("上半身").getWorldPosition(centerPos)

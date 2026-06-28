@@ -96,5 +96,8 @@
     "ar camera scale": 100,
     "enableMultiPlayer": false,
     "creditsText": "Music\nModel\nMotion\nEmotion\nCamera\nStage",
-    "creditsColor": "#ffffff"
+    "creditsColor": "#ffffff",
+    "loop.enabled": false,
+    "loop.startTime": 0.0,
+    "loop.endTime": 5.0
 }

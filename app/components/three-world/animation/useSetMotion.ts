@@ -8,12 +8,13 @@ import { useRef, useCallback, useEffect } from "react"
  */
 function useSetMotion() {
     const player = useGlobalStore(state => state.player)
+    const needSetMotion = useGlobalStore(state => state.needSetMotion)
     const isSetMotionRef = useRef(true)
 
     const setMotion = useCallback(() => {
         isSetMotionRef.current = true
     }, [])
-    
+
     useEffect(() => {
         player.addEventListener("play", setMotion)
         player.addEventListener("seeked", setMotion)
@@ -22,6 +23,11 @@ function useSetMotion() {
             player.removeEventListener("seeked", setMotion)
         }
     }, [setMotion])
+
+    useEffect(() => {
+        if (!needSetMotion) return
+        isSetMotionRef.current = true
+    }, [needSetMotion])
 
     return isSetMotionRef;
 }

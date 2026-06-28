@@ -6,7 +6,7 @@ import { button, useControls } from "leva";
 
 import 'media-chrome/react';
 import 'media-chrome/react/menu';
-import { buildGuiItem, loadFile } from "@/app/utils/gui";
+import { buildGuiItem } from "@/app/utils/gui";
 import { getProject } from "@theatre/core";
 import { CameraMode } from "@/app/types/camera";
 import { MediaControlBar, MediaController, MediaMuteButton, MediaPlayButton, MediaTimeDisplay, MediaTimeRange, MediaVolumeRange } from "media-chrome/react";
@@ -21,6 +21,9 @@ function AudioPlayer() {
     const audioFile = useConfigStore(state => state.audioFiles)?.[musicName]
     const cameraMode = usePresetStore(state => state["camera mode"])
     const runMode = usePresetStore(state => state["run mode"])
+    const loopEnabled = usePresetStore(state => state["loop.enabled"])
+    const loopStartTime = usePresetStore(state => state["loop.startTime"])
+    const loopEndTime = usePresetStore(state => state["loop.endTime"])
 
     useControls('Music', () => ({
         name: {
@@ -30,7 +33,10 @@ function AudioPlayer() {
         "select audio file": button(() => {
             Musics.onCreate()
         }),
-        "auto hide GUI on playing": buildGuiItem("auto hide GUI")
+        "auto hide GUI on playing": buildGuiItem("auto hide GUI"),
+        "loop.enabled": buildGuiItem("loop.enabled"),
+        "loop.startTime": buildGuiItem("loop.startTime"),
+        "loop.endTime": buildGuiItem("loop.endTime"),
     }), { order: 200, collapsed: true }, [musicName])
 
     const playerRef = useRef<HTMLVideoElement>(null)
@@ -58,6 +64,19 @@ function AudioPlayer() {
         playerRef.current = player;
         useGlobalStore.setState({ player })
     }
+
+    useEffect(() => {
+        if (!loopEnabled) return
+        const player = playerRef.current
+        const onTimeUpdate = () => {
+            if (player.currentTime < loopStartTime || player.currentTime >= loopEndTime) {
+                useGlobalStore.setState({ needSetMotion: true })
+                player.currentTime = loopStartTime; // Jump back to point A
+            }
+        }
+        player.addEventListener('timeupdate', onTimeUpdate);
+        return () => player.removeEventListener('timeupdate', onTimeUpdate);
+    }, [loopEnabled, loopStartTime, loopEndTime])
 
     // keyboard shortcuts
     useEffect(() => {

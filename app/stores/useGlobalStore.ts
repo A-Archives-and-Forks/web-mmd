@@ -69,7 +69,8 @@ export type GlobalState = {
         Models: Record<string, boolean>,
         Motions: Record<string, boolean>,
         onAllLoaded: () => void
-    }
+    },
+    needSetMotion: boolean
 }
 
 const useGlobalStore = create<GlobalState>(
@@ -132,7 +133,8 @@ const useGlobalStore = create<GlobalState>(
         modelsObject: {},
         getScreenShot: null,
         openMainUI: false,
-        autoRequestResources: null
+        autoRequestResources: null,
+        needSetMotion: false
     })
 )
 
