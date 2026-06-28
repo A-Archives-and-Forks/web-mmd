@@ -14,9 +14,10 @@ import { SnackbarProvider } from "notistack";
 import QRCodeOverlay from "./components/qrcode-overlay";
 import MainUI from "./components/main-ui";
 import { firebaseConfig } from "@/app/config";
+import ControlBar from "./components/control-bar";
 
 const Multiplayer = firebaseConfig ? dynamic(() => import('./components/multiplayer'), { ssr: false }) : () => <></>
-const ControlBar = dynamic(() => import('./components/control-bar'), { ssr: false })
+
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 const theme = createTheme({

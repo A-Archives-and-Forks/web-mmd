@@ -13,6 +13,7 @@ import { MediaControlBar, MediaController, MediaMuteButton, MediaPlayButton, Med
 import { RunModes } from "../../three-world/run-modes";
 import useConfigStore from "@/app/stores/useConfigStore";
 import Musics from "../../main-ui/musics";
+import { enqueueSnackbar } from "notistack";
 
 function AudioPlayer() {
     const currentTime = usePresetStore(state => state.currentTime)
@@ -34,10 +35,20 @@ function AudioPlayer() {
             Musics.onCreate()
         }),
         "auto hide GUI on playing": buildGuiItem("auto hide GUI"),
-        "loop.enabled": buildGuiItem("loop.enabled"),
-        "loop.startTime": buildGuiItem("loop.startTime"),
-        "loop.endTime": buildGuiItem("loop.endTime"),
+
     }), { order: 200, collapsed: true }, [musicName])
+
+    useControls('Music.Loop', {
+        "enabled": buildGuiItem("loop.enabled"),
+        "startTime": buildGuiItem("loop.startTime"),
+        "set startTime as now": button(() => {
+            usePresetStore.setState({ ["loop.startTime"]: playerRef.current.currentTime })
+        }),
+        "endTime": buildGuiItem("loop.endTime"),
+        "set endTime as now": button(() => {
+            usePresetStore.setState({ ["loop.endTime"]: playerRef.current.currentTime })
+        }),
+    }, { collapsed: true })
 
     const playerRef = useRef<HTMLVideoElement>(null)
     const saveCurrentTime = () => usePresetStore.setState({ currentTime: playerRef.current.currentTime })
@@ -66,7 +77,7 @@ function AudioPlayer() {
     }
 
     useEffect(() => {
-        if (!loopEnabled) return
+        if (!loopEnabled || loopStartTime >= loopEndTime) return
         const player = playerRef.current
         const onTimeUpdate = () => {
             if (player.currentTime < loopStartTime || player.currentTime >= loopEndTime) {
@@ -81,8 +92,8 @@ function AudioPlayer() {
     // keyboard shortcuts
     useEffect(() => {
         if (runMode == RunModes.GAME_MODE) return
+        const player = playerRef.current
         const handler = (e: KeyboardEvent) => {
-            const player = playerRef.current
             if (!player) return
             if (e.key == " ") {
                 e.stopPropagation()
@@ -100,9 +111,26 @@ function AudioPlayer() {
                 e.stopPropagation()
                 player.currentTime -= 1 / 30
             }
+            if (e.key == "l") {
+                const { ["loop.enabled"]: prevloopEnabled } = usePresetStore.getState()
+                usePresetStore.setState({ "loop.enabled": !prevloopEnabled })
+                enqueueSnackbar(`AB-Loop ${!prevloopEnabled ? "enabled" : "disabled"}`)
+            }
+            if (e.key == "j") {
+                e.stopPropagation()
+                usePresetStore.setState({ "loop.startTime": player.currentTime })
+                enqueueSnackbar(`Set AB-Loop start time to ${player.currentTime}`)
+            }
+            if (e.key == "k") {
+                e.stopPropagation()
+                usePresetStore.setState({ "loop.endTime": player.currentTime })
+                enqueueSnackbar(`Set AB-Loop end time to ${player.currentTime}`)
+            }
         }
         document.addEventListener("keyup", handler)
-        return () => document.removeEventListener("keyup", handler)
+        return () => {
+            document.removeEventListener("keyup", handler)
+        }
     }, [runMode])
 
     // load saved time when preset changed
@@ -127,6 +155,7 @@ function AudioPlayer() {
                 onPlay={onPlay}
                 onPause={onPause}
                 onSeeked={onSeeked}
+                tabIndex={-1}
             ></audio>
             <MediaControlBar style={{
                 width: "100%"

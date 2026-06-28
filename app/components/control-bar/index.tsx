@@ -23,9 +23,9 @@ function ControlBar() {
                 clearTimeout(timeoutIdRef.current);
                 timeoutIdRef.current = undefined
             }
-
+            if (isHoverRef.current) return
+            
             timeoutIdRef.current = setTimeout(function () {
-                if (isHoverRef.current) return
                 rawPlayer.style.opacity = "0";
                 fullScreenBt.style.opacity = "0";
                 if (player && !player.paused) {
