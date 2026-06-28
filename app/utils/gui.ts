@@ -4,6 +4,7 @@ import _ from "lodash";
 import usePresetStore, { PresetState } from "../stores/usePresetStore";
 import { readFile as readFile } from "./base";
 import * as THREE from "three";
+import { enqueueSnackbar } from "notistack";
 
 function loadFile(cb: (file: string, name: string) => void, asBase64 = true) {
     const selectFile = document.getElementById("selectFile") as HTMLInputElement
@@ -169,5 +170,8 @@ const infoStyle = (started: boolean) => ({
     },
 })
 
+function showToggleInfo(msg: string, enabled: boolean) {
+    enqueueSnackbar(msg, infoStyle(enabled))
+}
 
-export { buildMaterialGuiFunc, buildFlexGuiItem, buildGuiFunc, buildGuiItem, buildGuiObj, loadFile, setLevaValue, infoStyle };
+export { buildMaterialGuiFunc, buildFlexGuiItem, buildGuiFunc, buildGuiItem, buildGuiObj, loadFile, setLevaValue, infoStyle, showToggleInfo };

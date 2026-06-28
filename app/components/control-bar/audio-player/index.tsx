@@ -6,7 +6,7 @@ import { button, useControls } from "leva";
 
 import 'media-chrome/react';
 import 'media-chrome/react/menu';
-import { buildGuiItem } from "@/app/utils/gui";
+import { buildGuiItem, showToggleInfo } from "@/app/utils/gui";
 import { getProject } from "@theatre/core";
 import { CameraMode } from "@/app/types/camera";
 import { MediaControlBar, MediaController, MediaMuteButton, MediaPlayButton, MediaTimeDisplay, MediaTimeRange, MediaVolumeRange } from "media-chrome/react";
@@ -112,19 +112,19 @@ function AudioPlayer() {
                 player.currentTime -= 1 / 30
             }
             if (e.key == "l") {
-                const { ["loop.enabled"]: prevloopEnabled } = usePresetStore.getState()
-                usePresetStore.setState({ "loop.enabled": !prevloopEnabled })
-                enqueueSnackbar(`AB-Loop ${!prevloopEnabled ? "enabled" : "disabled"}`)
+                const { ["loop.enabled"]: prevLoopEnabled } = usePresetStore.getState()
+                usePresetStore.setState({ "loop.enabled": !prevLoopEnabled })
+                showToggleInfo(`AB-Loop ${!prevLoopEnabled ? "enabled" : "disabled"}`, !prevLoopEnabled)
             }
             if (e.key == "j") {
                 e.stopPropagation()
                 usePresetStore.setState({ "loop.startTime": player.currentTime })
-                enqueueSnackbar(`Set AB-Loop start time to ${player.currentTime}`)
+                enqueueSnackbar(`Set AB-Loop start time to ${player.currentTime.toFixed(2)}s`)
             }
             if (e.key == "k") {
                 e.stopPropagation()
                 usePresetStore.setState({ "loop.endTime": player.currentTime })
-                enqueueSnackbar(`Set AB-Loop end time to ${player.currentTime}`)
+                enqueueSnackbar(`Set AB-Loop end time to ${player.currentTime.toFixed(2)}s`)
             }
         }
         document.addEventListener("keyup", handler)
@@ -147,7 +147,7 @@ function AudioPlayer() {
     }, [audioFile])
 
     return (
-        <MediaController id="rawPlayer" className={`${styles.player} control-bar`} audio>
+        <MediaController id="rawPlayer" hotkeys="nospace noj nok nol" className={`${styles.player} control-bar`} audio>
             <audio
                 ref={onLoaded}
                 slot="media"
