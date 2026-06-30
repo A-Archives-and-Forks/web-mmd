@@ -144,13 +144,21 @@ function Director() {
                 case MOUSE.MIDDLE:
                     break;
                 case MOUSE.RIGHT:
-                    mouseModeRef.current = mouseModeRef.current == MOUSE.PAN ? null : MOUSE.PAN
+                    mouseModeRef.current = MOUSE.PAN
                     break;
             }
             if (mouseModeRef.current !== null) {
                 domElement.requestPointerLock()
             } else {
                 document.exitPointerLock()
+            }
+        }
+
+        const onMouseup = async (e: MouseEvent) => {
+            switch (e.button) {
+                case MOUSE.RIGHT:
+                    mouseModeRef.current = MOUSE.ROTATE
+                    break;
             }
         }
 
@@ -199,6 +207,7 @@ function Director() {
         document.addEventListener("keyup", onKeyboardShortcuts)
         domElement.addEventListener("mousemove", onMousemove)
         domElement.addEventListener("mousedown", onMousedown)
+        domElement.addEventListener("mouseup", onMouseup)
         domElement.addEventListener("wheel", onWheel)
         domElement.addEventListener("contextmenu", onContextmenu)
         return () => {
@@ -207,6 +216,7 @@ function Director() {
             document.removeEventListener("keyup", onKeyboardShortcuts)
             domElement.removeEventListener("mousemove", onMousemove)
             domElement.removeEventListener("mousedown", onMousedown)
+            domElement.removeEventListener("mouseup", onMouseup)
             domElement.removeEventListener("wheel", onWheel)
             domElement.removeEventListener("contextmenu", onContextmenu)
             cameraPose.up.set(0, 1, 0)
