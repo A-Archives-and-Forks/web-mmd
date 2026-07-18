@@ -93,11 +93,13 @@ function Material() {
         const origFragmentShader = material.userData.fragmentShader;
         const origVertexShader = material.userData.vertexShader;
         const onBeforeCompiles: Record<string, typeof material.onBeforeCompile> = {}
-        material.onBeforeCompile = (parameters, renderer) => {
-            parameters.vertexShader = origVertexShader
-            parameters.fragmentShader = origFragmentShader
-            for (const [key, onBeforeCompile] of Object.entries(onBeforeCompiles)) {
-                onBeforeCompile(parameters, renderer)
+        if (origFragmentShader && origVertexShader) {
+            material.onBeforeCompile = (parameters, renderer) => {
+                parameters.vertexShader = origVertexShader
+                parameters.fragmentShader = origFragmentShader
+                for (const [key, onBeforeCompile] of Object.entries(onBeforeCompiles)) {
+                    onBeforeCompile(parameters, renderer)
+                }
             }
         }
         const targetAxis = new THREE.Vector3(0, 0.3, 1)
